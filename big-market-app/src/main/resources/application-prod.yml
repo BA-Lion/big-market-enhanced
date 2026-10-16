@@ -1,0 +1,43 @@
+# 部署环境必须显式注入端点及凭证，不沿用原作者的机器地址。
+server:
+  port: ${SERVER_PORT:8092}
+spring:
+  rabbitmq:
+    addresses: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+  elasticsearch.datasource:
+    url: ${ELASTICSEARCH_JDBC_URL}
+mini-db-router:
+  jdbc:
+    datasource:
+      db00:
+        url: ${MYSQL_DB00_URL}
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+      db01:
+        url: ${MYSQL_DB01_URL}
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+      db02:
+        url: ${MYSQL_DB02_URL}
+        username: ${MYSQL_USERNAME}
+        password: ${MYSQL_PASSWORD}
+redis:
+  sdk:
+    config:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+dubbo:
+  registry:
+    address: ${DUBBO_REGISTRY_ADDRESS:N/A}
+xxl:
+  job:
+    accessToken: ${XXL_JOB_ACCESS_TOKEN}
+    admin:
+      addresses: ${XXL_JOB_ADMIN_ADDRESS}
+gateway:
+  config:
+    apiHost: ${GATEWAY_API_HOST}
+    big-market-appId: ${GATEWAY_APP_ID}
+    big-market-appToken: ${GATEWAY_APP_TOKEN}

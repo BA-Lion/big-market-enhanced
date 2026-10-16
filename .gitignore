@@ -1,0 +1,57 @@
+# Maven / JVM output
+**/target/
+*.class
+*.log
+*.hprof
+hs_err_pid*
+replay_pid*
+
+# Local IDE state
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.springBeans
+.sts4-cache/
+
+# Runtime data, caches and local overrides
+**/data/
+**/logs/
+/docs/dev-ops/log/
+.cache/
+.env
+.env.*
+!.env.example
+!**/.env.example
+/config/
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+*.local.yml
+*.local.yaml
+*.local.properties
+*.pem
+*.key
+*.p12
+*.jks
+
+# OS / tooling
+.DS_Store
+Thumbs.db
+Desktop.ini
+__pycache__/
+*.py[cod]
+/.nb-gradle/
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/dist/
+/libs/
+
+# .ai records, SQL, Maven wrapper and example configuration stay versioned.

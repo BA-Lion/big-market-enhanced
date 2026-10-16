@@ -1,0 +1,73 @@
+# 独立本地开发基础设施。应用在宿主机运行，不启动旧的远程应用镜像。
+name: big-market-enhanced-local
+services:
+  mysql:
+    image: mysql:8.0.32
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-123456}
+      MYSQL_ROOT_HOST: '%'
+    ports:
+      - '127.0.0.1:13306:3306'
+    volumes:
+      - local-mysql:/var/lib/mysql
+      - ./mysql/sql/big_market.sql:/docker-entrypoint-initdb.d/10-big-market.sql:ro
+      - ./mysql/sql/big_market_01.sql:/docker-entrypoint-initdb.d/20-big-market-01.sql:ro
+      - ./mysql/sql/big_market_02.sql:/docker-entrypoint-initdb.d/30-big-market-02.sql:ro
+      - ./mysql/sql/xxl_job.sql:/docker-entrypoint-initdb.d/40-xxl-job.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'MYSQL_PWD="$${MYSQL_ROOT_PASSWORD}" mysqladmin ping -h 127.0.0.1 -uroot --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:6.2
+    ports:
+      - '127.0.0.1:16379:6379'
+    volumes:
+      - local-redis:/data
+
+  rabbitmq:
+    image: rabbitmq:3.12.9-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
+    ports:
+      - '127.0.0.1:5672:5672'
+      - '127.0.0.1:15672:15672'
+    volumes:
+      - local-rabbitmq:/var/lib/rabbitmq
+
+  elasticsearch:
+    image: elasticsearch:7.17.14
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      # 原项目使用 x-pack SQL JDBC；本地先用 trial 验证其许可要求。
+      xpack.license.self_generated.type: trial
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    ports:
+      - '127.0.0.1:9200:9200'
+    volumes:
+      - local-elasticsearch:/usr/share/elasticsearch/data
+
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:2.4.1
+    environment:
+      SPRING_DATASOURCE_URL: 'jdbc:mysql://mysql:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true'
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-123456}
+      PARAMS: '--server.port=8080 --xxl.job.accessToken=${XXL_JOB_ACCESS_TOKEN:-default_token}'
+    ports:
+      - '127.0.0.1:9090:8080'
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  local-mysql:
+  local-redis:
+  local-rabbitmq:
+  local-elasticsearch:
