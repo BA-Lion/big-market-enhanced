@@ -6,6 +6,7 @@
 - 项目：原 big-market 的优化升级仓库；源码基线导入和静态初始化已完成。
 - 项目画像：[project.md](project.md)
 - 操作入口：[README](../README.md)；协作入口：[AGENTS.md](../AGENTS.md)
+- **Windows AI 构建/测试/启动必读：[Java 8 调用流程](doc/java8-workflow.md)**。统一使用 scripts/java8.ps1，先 Check，再按授权执行 Maven/Run；无需预先切换环境，禁止直接依赖全局 java/mvn。
 - 当前任务：无进行中的开发任务；等待用户下一步指导。
 - 当前限制：实际构建与联调尚未验证，见 PROB-0001；不阻塞静态初始化完成。
 - 最后维护：2026-10-16
@@ -38,6 +39,7 @@
 
 | 结果 | 状态 | 对象 | 验证时间 |
 | --- | --- | --- | --- |
+| [TEST-0002 Java 8 脚本验证](test/result/2026-10-16-java8-launcher.md) | passed | PowerShell 5.1/7 下工具、参数、防护及环境恢复 | 2026-10-16 |
 | [TEST-0001 初始化静态验证](test/result/2026-10-16-initialization.md) | partial | 静态检查通过，实际构建运行未验证 | 2026-10-16 |
 
 ## 稳定知识入口
@@ -45,6 +47,7 @@
 | 记录 | 状态 | 适用范围 |
 | --- | --- | --- |
 | [DOC-0001 来源、转换与运行边界](doc/runtime-and-import.md) | current | 初始化来源、16 个转换文件和本地入口 |
+| [DOC-0002 Java 8 调用流程](doc/java8-workflow.md) | current | Windows AI 使用固定 JDK 8 构建、测试与启动 |
 | [ATTN-0001 集成测试边界](attention/integration-test-boundaries.md) | verified | 执行原测试、使用活动数据和外部奖品时 |
 
 `test/experience/` 尚无独立经验记录；模板保留在 `templates/`，不作为项目事实。
@@ -53,6 +56,7 @@
 
 | 记录 | 状态 | 范围 |
 | --- | --- | --- |
+| [TASK-0002 Java 8 命令入口](task/current/2026-10-16-java8-launcher.md) | completed | 项目脚本及 AI 调用记忆；未启动服务 |
 | [TASK-0001 导入与初始化](task/current/2026-10-16-repository-initialization.md) | completed | 复制、构建配置、开发入口和项目记忆 |
 | [DEC-0001 导入方案](decision/2026-10-16-source-import.md) | approved（任务已完成） | 保持业务基线的独立导入，不作为新任务授权 |
 

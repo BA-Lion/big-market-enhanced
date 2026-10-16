@@ -24,15 +24,16 @@
 
 ## 本地构建
 
-基线使用 **JDK 8**、Maven 3.8+、UTF-8。请用 `java -version` 和 `mvn -v` 确认 Maven 使用的 JDK；当前机器检测到 JDK 17，但这不代表本项目已通过 Java 17 兼容验证。Windows 可直接使用 Maven；`.sh` 脚本需要 Git Bash / WSL。无需改包名、改模块名或转换 Java 源文件。
+基线使用 **JDK 8**、Maven 3.8+、UTF-8。Windows 统一通过 `scripts/java8.ps1` 自动选用已安装的 Java 8 和 Maven，保留全局 JDK 17；无需每次新开终端手动切换环境。`.sh` 脚本需要 Git Bash / WSL。无需改包名、改模块名或转换 Java 源文件。
 
 在仓库根目录执行：
 
 ```powershell
-mvn -B -ntp clean package -DskipTests
+& .\scripts\java8.ps1 -Action Check
+& .\scripts\java8.ps1 -Action Maven -ToolArguments @('-B', '-ntp', 'clean', 'package', '-DskipTests')
 ```
 
-产物为 `big-market-app/target/big-market-app.jar`。`-DskipTests` 跳过执行但仍编译测试；`-Dmaven.test.skip=true` 才会同时跳过测试编译。依赖必须能够从配置的 Maven 仓库下载，包括 db-router 和 business-behavior-monitor SDK。尚未提供 Maven Wrapper，需自行安装 Maven。
+产物为 `big-market-app/target/big-market-app.jar`。`-DskipTests` 跳过执行但仍编译测试；`-Dmaven.test.skip=true` 才会同时跳过测试编译。依赖必须能够从配置的 Maven 仓库下载，包括 db-router 和 business-behavior-monitor SDK。尚未提供 Maven Wrapper，需自行安装 Maven。这里的 java8.ps1 是选择 JDK 和调用已安装 Maven 的项目脚本，不负责下载 Maven。具体安装路径默认值在脚本中；可通过 -JdkHome/-MavenHome 或 BIG_MARKET_JAVA_HOME/BIG_MARKET_MAVEN_HOME 覆盖，优先级为参数、项目变量、默认值。完整步骤见 [Java 8 调用流程](.ai/doc/java8-workflow.md)。
 
 无需中间件的结构检查：
 
@@ -72,8 +73,10 @@ XXL-Job 管理端在容器中，需要回调宿主机的执行器。Windows Dock
 
 ```powershell
 $env:XXL_JOB_EXECUTOR_ADDRESS = 'http://host.docker.internal:9999/'
-java -jar big-market-app/target/big-market-app.jar --spring.profiles.active=dev
+& .\scripts\java8.ps1 -Action Run
 ```
+
+只预览而不启动时，执行 `& .\scripts\java8.ps1 -Action Run -DryRun`。脚本前台运行，完成后恢复原 JAVA_HOME、PATH 和工作目录；不修改全局配置。
 
 应用默认监听 `http://localhost:8098`，API 前缀 `/api/v1/raffle/`。可先访问 `/actuator/health` 检查状态。这个地址只有完成上述启动后才可访问，本次未实际访问。
 
@@ -105,7 +108,7 @@ java -jar big-market-app/target/big-market-app.jar --spring.profiles.active=dev
 默认跳过测试执行；原有测试主要是 JUnit 4 + SpringBootTest，依赖中间件，部分会修改数据或使用 CountDownLatch 永久等待。先检查目标测试，再在准备好的环境中选择单个测试，例如：
 
 ```powershell
-mvn -B -ntp -pl big-market-app -am test -DskipTests=false '-Dtest=AwardDaoTest' -Dsurefire.failIfNoSpecifiedTests=false
+& .\scripts\java8.ps1 -Action Maven -ToolArguments @('-B', '-ntp', '-pl', 'big-market-app', '-am', 'test', '-DskipTests=false', '-Dtest=AwardDaoTest', '-Dsurefire.failIfNoSpecifiedTests=false')
 ```
 
 示例 SQL 的活动 `100401` 已于 2026-10-06 到期，不能直接作为当前抽奖成功的验收数据；`100301` 截止 2034-03-09。实际抽奖前先核实活动、SKU 与策略关系并调用相应 armory 接口。

@@ -11,7 +11,7 @@ updated: 2026-10-16
 - 本仓库 big-market-enhanced 用于基于原 big-market 修复 Bug、优化业务流程并逐步升级，不是原项目学习笔记目录。
 - 主要用户：本项目维护者及使用抽奖活动、签到返利、积分兑换、奖品发放和运营查询接口的应用。
 - 当前阶段：基线导入与仓库初始化已完成；实际构建、启动及端到端联调尚未验证，下一阶段由用户指导。
-- 原始源码来自相邻仓库 `../all-big-market/big-market`（相对本仓库根目录），提交 `7e31b5374f4b889a9ea306d73a5623b1e49c786a`。导入 382 个跟踪文件；保留本仓库独立 Git，未提交。
+- 原始源码来自相邻仓库 `../all-big-market/big-market`（相对本仓库根目录），提交 `7e31b5374f4b889a9ea306d73a5623b1e49c786a`。导入 382 个跟踪文件；保留本仓库独立 Git；初始化已形成提交 f3200cf，后续工具变更以当前工作树为准。
 - 来源、转换清单和证据统一保存在 [导入与运行说明](doc/runtime-and-import.md)，不把初始化工作树称作已验证发布版本。
 
 ## 技术栈
@@ -44,6 +44,7 @@ updated: 2026-10-16
 | `big-market-api/` | 服务接口及 DTO | 独立 Maven 模块，发布插件未启用 |
 | `big-market-querys/` | 查询模型及仓储接口 | 沿用原名称；不顺手重命名 |
 | `big-market-types/` | 常量、异常、公共类型和注解 | 变动评估所有依赖模块 |
+| `scripts/java8.ps1` | Windows Java 8 的 Check/Maven/Run 统一入口 | AI 本地构建与启动必须通过该入口 |
 | `docs/dev-ops/mysql/sql/` | 表结构及种子数据、调度/注册库脚本 | 原始导入基线；不作为生产迁移脚本直接执行 |
 | `docs/dev-ops/docker-compose-local.yml` | 推荐的本地中间件入口 | 应用运行在宿主机；不含全部扩展链路 |
 | `docs/dev-ops/` 其他文件 | 历史部署、Canal、监控、curl 资料 | 包含旧端点；不可直接当成默认环境 |
@@ -55,17 +56,20 @@ updated: 2026-10-16
 
 在仓库根目录执行；以下启动和测试命令是操作说明，不代表本次已运行。
 
+**Windows AI 固定入口：[Java 8 调用流程](doc/java8-workflow.md)。每次构建、测试和启动都必须调用 scripts/java8.ps1，不得直接依赖系统 java/mvn。无需事先激活环境；新终端、重启后仍使用同一入口。首次先 Check，再根据授权执行 Maven 或 Run；仅预览时加 DryRun。脚本默认使用用户确认的 JDK 8 和 Maven 安装目录，支持参数或项目专用环境变量覆盖，完成后恢复调用者环境。**
+
 | 用途 | 命令 | 前置条件 |
 | --- | --- | --- |
-| 工具确认 | `java -version`、`mvn -v`、`docker compose version` | Maven 使用 JDK 8 基线 |
-| 依赖解析与打包 | `mvn -B -ntp clean package -DskipTests` | Maven 可下载全部依赖；仍会编译测试 |
+| 工具确认 | `& .\scripts\java8.ps1 -Action Check`、`docker compose version` | Maven 使用 JDK 8 基线 |
+| 依赖解析与打包 | `& .\scripts\java8.ps1 -Action Maven -ToolArguments @('-B','-ntp','clean','package','-DskipTests')` | Maven 可下载全部依赖；仍会编译测试 |
 | 初始化结构检查 | `python .ai/test/script/validate_initialization.py` | Python 3.10+，标准库 |
 | 导入逐文件对比 | `python .ai/test/script/validate_initialization.py --source ../all-big-market/big-market` | 原项目仍可只读访问，Git 在 PATH |
 | Harness 校验 | `python .ai/test/script/validate_harness.py` | Python 3.10+，标准库 |
 | Compose 静态检查 | `docker compose -f docs/dev-ops/docker-compose-local.yml config --quiet` | Compose v2+，不需要启动容器 |
 | 启动本地中间件 | `docker compose -f docs/dev-ops/docker-compose-local.yml up -d` | Docker Linux containers；全新卷会自动导入 SQL |
-| 启动应用 | `java -jar big-market-app/target/big-market-app.jar --spring.profiles.active=dev` | JDK 8、已打包、MySQL/Redis/MQ/ES 就绪，XXL 回调地址已设置 |
-| 单个集成测试 | `mvn -B -ntp -pl big-market-app -am test -DskipTests=false -Dtest=AwardDaoTest -Dsurefire.failIfNoSpecifiedTests=false` | 中间件与种子数据就绪；先阅读目标测试 |
+| 预览启动 | `& .\scripts\java8.ps1 -Action Run -DryRun` | 仅检查并显示命令，不要求已有 JAR，不启动应用 |
+| 启动应用 | `& .\scripts\java8.ps1 -Action Run` | JDK 8、已打包、MySQL/Redis/MQ/ES 就绪，XXL 回调地址已设置 |
+| 单个集成测试 | `& .\scripts\java8.ps1 -Action Maven -ToolArguments @('-B','-ntp','-pl','big-market-app','-am','test','-DskipTests=false','-Dtest=AwardDaoTest','-Dsurefire.failIfNoSpecifiedTests=false')` | 中间件与种子数据就绪；先阅读目标测试 |
 | 本地镜像构建 | `docker build -t big-market-enhanced:local big-market-app` | 已打包；不自动推送 |
 | 格式化 | 尚无统一格式化插件；保持现有 Java 风格，UTF-8，文本换行由 .gitattributes 约束 | 不做无关的全仓格式重排 |
 | 静态分析 | 尚未配置 Checkstyle、SpotBugs 或独立 Java 静态分析门禁 | 不把轻量结构脚本描述为 Java 静态分析 |
@@ -74,6 +78,7 @@ updated: 2026-10-16
 ## 开发约束
 
 - 兼容性目标：维持现有 Maven 坐标、包名、模块名、HTTP API、Dubbo、MQ 主题和任务处理器名称；架构基线见 [ARCH-0001](architecture/2026-10-16-module-baseline.md)。
+- Java 工具入口：Windows 使用 scripts/java8.ps1；具体默认安装位置只保存在脚本中。参数 -JdkHome/-MavenHome 优先，其次 BIG_MARKET_JAVA_HOME/BIG_MARKET_MAVEN_HOME，不回退到全局 JDK 17。调用步骤以 [DOC-0002](doc/java8-workflow.md) 为准。
 - 文件边界：原仓库只读；所有增强修改落在当前仓库。不复制源 `.git`、不覆盖用户修改；Git 提交、推送和发布按当次授权处理。
 - 新增依赖：优先使用当前 Boot 版本管理，检查 Java 8/Boot 2.7 兼容性。生产依赖新增或大版本升级须在任务方案中明确，不为初始化直接迁到 Boot 3。
 - 数据变更：分库分表、库存、账户额度、积分、发奖和消息补偿涉及一致性，不可未经评估改变。现有 SQL 是重建及样例脚本，不能充当无损迁移。
@@ -101,11 +106,11 @@ updated: 2026-10-16
 
 ## 已知环境限制
 
-- 本次 Windows 环境检测到 Maven 3.9.16 / JDK 17.0.19，未检测到 JDK 8；尚未证明 Java 17 兼容性，建议按原 Java 8 基线实际构建。
+- 当前全局 Java 环境仍为 JDK 17；项目脚本已在 PowerShell 5.1/7 下验证使用 Temurin 1.8.0_504 和 Maven 3.9.16。工具可用不等于完整编译或业务运行通过，见 [TEST-0002](test/result/2026-10-16-java8-launcher.md)。
 - 离线 validate 缺少 Boot 2.7.12 父 POM 缓存；实际依赖下载、编译与启动均未完成。
 - Compose 解析通过不代表镜像已下载或中间件可用；XXL-Job 的容器到宿主机回调需配置。
 - 现有测试可能写数据、依赖固定样例并永久等待，不能未经检查全量运行。
 - 活动 100401 已到期；活动有效期、SKU、策略及 Redis 装配均影响联调。
 - ES SQL JDBC 需要合适许可；local trial 有时限，索引/Canal 未包含在核心启动路径。
 - 前端、外部账户奖品网关不在本仓库；gateway enable 不控制当前远程调用，Redis 密码接入也未启用。
-- 未执行生产部署、数据迁移、容器启动或 Git 提交。
+- 本次脚本任务未执行完整构建、服务启动、部署、数据迁移或 Git 提交。

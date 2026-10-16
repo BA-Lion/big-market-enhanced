@@ -13,7 +13,7 @@ verified_at_revision: source-7e31b5374f4b889a9ea306d73a5623b1e49c786a-plus-initi
 
 ## 职责
 
-记录增强仓库与原项目的差异，以及当前可用的运行入口。操作步骤以[根 README](../../README.md)为准。
+记录增强仓库与原项目的差异，以及当前可用的运行入口。操作步骤以[根 README](../../README.md)为准；Windows AI 的构建和启动必须使用 [Java 8 调用流程](java8-workflow.md) 中的脚本入口。
 
 ## 边界与非职责
 
